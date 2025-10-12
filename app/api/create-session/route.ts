@@ -92,11 +92,8 @@ export async function POST(request: Request): Promise<Response> {
             user: userId,
             chatkit_configuration: {
               file_upload: {
-                enabled:
-                  parsedBody?.chatkit_configuration?.file_upload?.enabled ?? false,
+                enabled: false, // Disable file uploads to reduce complexity
               },
-              // Force non-streaming
-              streaming: false,
             },
           }),
         });

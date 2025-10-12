@@ -205,9 +205,9 @@ export function ChatKitPanel({
           body: JSON.stringify({
             workflow: { id: WORKFLOW_ID },
             chatkit_configuration: {
-              // enable attachments
+              // Disable file uploads to reduce complexity
               file_upload: {
-                enabled: true,
+                enabled: false,
               },
             },
           }),
@@ -302,8 +302,8 @@ export function ChatKitPanel({
     composer: {
       placeholder: PLACEHOLDER_INPUT,
       attachments: {
-        // Enable attachments
-        enabled: true,
+        // Disable attachments to reduce complexity
+        enabled: false,
       },
     },
     threadItemActions: {
