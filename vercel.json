@@ -1,0 +1,9 @@
+{
+  "functions": {
+    "app/api/create-session/route.ts": {
+      "maxDuration": 10
+    }
+  },
+  "regions": ["iad1"],
+  "framework": "nextjs"
+}

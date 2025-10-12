@@ -1,6 +1,6 @@
 import { WORKFLOW_ID } from "@/lib/config";
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 
 interface CreateSessionRequestBody {
   workflow?: { id?: string | null } | null;
@@ -73,9 +73,9 @@ export async function POST(request: Request): Promise<Response> {
     
     while (retryCount <= maxRetries) {
       try {
-        // Add timeout handling
+        // Add timeout handling (Edge Runtime compatible)
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout for UI responsiveness
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout (Vercel hobby limit)
         
         upstreamResponse = await fetch(url, {
           method: "POST",
@@ -214,6 +214,36 @@ export async function POST(request: Request): Promise<Response> {
     );
   } catch (error) {
     console.error("Create session error", error);
+    
+    // Vercel-specific error handling
+    if (error instanceof Error) {
+      if (error.message.includes('timeout') || error.message.includes('aborted')) {
+        return buildJsonResponse(
+          { error: "Request timeout - Vercel function limit reached" },
+          408,
+          { "Content-Type": "application/json" },
+          sessionCookie
+        );
+      }
+      
+      if (error.message.includes('memory') || error.message.includes('out of memory')) {
+        return buildJsonResponse(
+          { error: "Function memory limit exceeded" },
+          507,
+          { "Content-Type": "application/json" },
+          sessionCookie
+        );
+      }
+      
+      if (error.message.includes('cold start') || error.message.includes('function')) {
+        return buildJsonResponse(
+          { error: "Function initialization error - please retry" },
+          503,
+          { "Content-Type": "application/json" },
+          sessionCookie
+        );
+      }
+    }
     
     let errorMessage = "Unexpected error";
     let retryable = false;

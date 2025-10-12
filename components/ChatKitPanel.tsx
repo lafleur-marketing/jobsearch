@@ -67,6 +67,9 @@ export function ChatKitPanel({
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isRefreshingRef = useRef(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // Request queuing to prevent Vercel function overload
+  const requestQueue = useRef<Promise<string> | null>(null);
 
   const setErrorState = useCallback((updates: Partial<ErrorState>) => {
     setErrors((current) => ({ ...current, ...updates }));
@@ -223,8 +226,16 @@ export function ChatKitPanel({
         clearTimeout(debounceTimeoutRef.current);
       }
 
+      // Queue requests to prevent Vercel function overload
+      if (requestQueue.current) {
+        if (isDev) {
+          console.debug("[ChatKitPanel] Request queued, waiting for current request");
+        }
+        return requestQueue.current;
+      }
+
       // Debounce rapid calls (wait 500ms)
-      return new Promise<string>((resolve, reject) => {
+      const requestPromise = new Promise<string>((resolve, reject) => {
         debounceTimeoutRef.current = setTimeout(async () => {
           try {
             isRefreshingRef.current = true;
@@ -326,9 +337,13 @@ export function ChatKitPanel({
           } finally {
             isRefreshingRef.current = false;
             setIsRefreshing(false);
+            requestQueue.current = null; // Clear queue
           }
         }, 500); // 500ms debounce
       });
+
+      requestQueue.current = requestPromise;
+      return requestPromise;
     },
     [isWorkflowConfigured, setErrorState, handleSessionExpired]
   );
