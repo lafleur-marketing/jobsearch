@@ -66,31 +66,92 @@ export async function POST(request: Request): Promise<Response> {
     const apiBase = process.env.CHATKIT_API_BASE ?? DEFAULT_CHATKIT_BASE;
     const url = `${apiBase}/v1/chatkit/sessions`;
     
-    // Add timeout handling
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    // Retry logic for failed requests
+    const maxRetries = 3;
+    let retryCount = 0;
+    let upstreamResponse: Response | undefined;
     
-    const upstreamResponse = await fetch(url, {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${openaiApiKey}`,
-        "OpenAI-Beta": "chatkit_beta=v1",
-      },
-      body: JSON.stringify({
-        workflow: { id: resolvedWorkflowId },
-        user: userId,
-        chatkit_configuration: {
-          file_upload: {
-            enabled:
-              parsedBody?.chatkit_configuration?.file_upload?.enabled ?? false,
+    while (retryCount <= maxRetries) {
+      try {
+        // Add timeout handling
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+        
+        upstreamResponse = await fetch(url, {
+          method: "POST",
+          signal: controller.signal,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${openaiApiKey}`,
+            "OpenAI-Beta": "chatkit_beta=v1",
           },
-        },
-      }),
-    });
+          body: JSON.stringify({
+            workflow: { id: resolvedWorkflowId },
+            user: userId,
+            chatkit_configuration: {
+              file_upload: {
+                enabled:
+                  parsedBody?.chatkit_configuration?.file_upload?.enabled ?? false,
+              },
+            },
+          }),
+        });
+        
+        clearTimeout(timeoutId);
+        
+        // If successful, break out of retry loop
+        if (upstreamResponse.ok) {
+          break;
+        }
+        
+        // If it's a retryable error and we haven't exceeded max retries
+        if (retryCount < maxRetries && 
+            (upstreamResponse.status >= 500 || upstreamResponse.status === 429)) {
+          retryCount++;
+          const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff: 2s, 4s, 8s
+          
+          if (process.env.NODE_ENV !== "production") {
+            console.info(`[create-session] Retry ${retryCount}/${maxRetries} after ${delay}ms`, {
+              status: upstreamResponse.status,
+              statusText: upstreamResponse.statusText,
+            });
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        
+        // If not retryable or max retries exceeded, break
+        break;
+        
+      } catch (error) {
+        // If it's a timeout or network error and we haven't exceeded max retries
+        if (retryCount < maxRetries && 
+            (error instanceof Error && 
+             (error.name === 'AbortError' || error.message.includes('fetch')))) {
+          retryCount++;
+          const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff
+          
+          if (process.env.NODE_ENV !== "production") {
+            console.info(`[create-session] Retry ${retryCount}/${maxRetries} after network error`, {
+              error: error.message,
+              delay: delay,
+            });
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        
+        // If not retryable or max retries exceeded, re-throw
+        throw error;
+      }
+    }
     
-    clearTimeout(timeoutId);
+    // Ensure we have a response
+    if (!upstreamResponse) {
+      throw new Error("Failed to get response after all retries");
+    }
 
     if (process.env.NODE_ENV !== "production") {
       console.info("[create-session] upstream response", {
