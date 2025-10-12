@@ -1,6 +1,6 @@
 import { WORKFLOW_ID } from "@/lib/config";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 interface CreateSessionRequestBody {
   workflow?: { id?: string | null } | null;
@@ -61,8 +61,14 @@ export async function POST(request: Request): Promise<Response> {
 
     const apiBase = process.env.CHATKIT_API_BASE ?? DEFAULT_CHATKIT_BASE;
     const url = `${apiBase}/v1/chatkit/sessions`;
+    
+    // Add timeout handling
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    
     const upstreamResponse = await fetch(url, {
       method: "POST",
+      signal: controller.signal,
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${openaiApiKey}`,
@@ -79,6 +85,8 @@ export async function POST(request: Request): Promise<Response> {
         },
       }),
     });
+    
+    clearTimeout(timeoutId);
 
     if (process.env.NODE_ENV !== "production") {
       console.info("[create-session] upstream response", {
@@ -98,12 +106,25 @@ export async function POST(request: Request): Promise<Response> {
         statusText: upstreamResponse.statusText,
         body: upstreamJson,
       });
+      
+      // Handle specific error cases
+      let errorMessage = upstreamError ?? `Failed to create session: ${upstreamResponse.statusText}`;
+      
+      if (upstreamResponse.status === 429) {
+        errorMessage = "Rate limit exceeded. Please wait a moment and try again.";
+      } else if (upstreamResponse.status === 401) {
+        errorMessage = "Authentication failed. Please check your API key.";
+      } else if (upstreamResponse.status === 403) {
+        errorMessage = "Access forbidden. Please check your API permissions.";
+      } else if (upstreamResponse.status === 500) {
+        errorMessage = "OpenAI service is temporarily unavailable. Please try again.";
+      }
+      
       return buildJsonResponse(
         {
-          error:
-            upstreamError ??
-            `Failed to create session: ${upstreamResponse.statusText}`,
+          error: errorMessage,
           details: upstreamJson,
+          retryable: upstreamResponse.status >= 500 || upstreamResponse.status === 429,
         },
         upstreamResponse.status,
         { "Content-Type": "application/json" },
@@ -126,8 +147,26 @@ export async function POST(request: Request): Promise<Response> {
     );
   } catch (error) {
     console.error("Create session error", error);
+    
+    let errorMessage = "Unexpected error";
+    let retryable = false;
+    
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        errorMessage = "Request timed out. Please try again.";
+        retryable = true;
+      } else if (error.message.includes('fetch')) {
+        errorMessage = "Network error. Please check your connection and try again.";
+        retryable = true;
+      }
+    }
+    
     return buildJsonResponse(
-      { error: "Unexpected error" },
+      { 
+        error: errorMessage,
+        retryable: retryable,
+        details: error instanceof Error ? error.message : String(error)
+      },
       500,
       { "Content-Type": "application/json" },
       sessionCookie

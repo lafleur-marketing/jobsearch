@@ -157,6 +157,18 @@ export function ChatKitPanel({
     setWidgetInstanceKey((prev) => prev + 1);
   }, []);
 
+  const handleSessionExpired = useCallback(() => {
+    console.warn("Session expired, attempting to refresh...");
+    setErrorState({ 
+      session: "Session expired. Refreshing...", 
+      retryable: true 
+    });
+    // Trigger session refresh after a short delay
+    setTimeout(() => {
+      handleResetChat();
+    }, 1000);
+  }, [handleResetChat, setErrorState]);
+
   const getClientSecret = useCallback(
     async (currentSecret: string | null) => {
       if (isDev) {
@@ -229,6 +241,22 @@ export function ChatKitPanel({
             status: response.status,
             body: data,
           });
+          
+          // Check if this is a session expiration error
+          const isSessionExpired = response.status === 401 || 
+            (typeof data.error === 'string' && data.error.toLowerCase().includes('expired'));
+          
+          if (isMountedRef.current) {
+            if (isSessionExpired) {
+              handleSessionExpired();
+            } else {
+              setErrorState({ 
+                session: detail, 
+                retryable: response.status >= 500 || response.status === 429 
+              });
+              setIsInitializingSession(false);
+            }
+          }
           throw new Error(detail);
         }
 
@@ -258,7 +286,7 @@ export function ChatKitPanel({
         }
       }
     },
-    [isWorkflowConfigured, setErrorState]
+    [isWorkflowConfigured, setErrorState, handleSessionExpired]
   );
 
   const chatkit = useChatKit({
