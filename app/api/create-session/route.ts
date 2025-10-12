@@ -75,7 +75,7 @@ export async function POST(request: Request): Promise<Response> {
       try {
         // Add timeout handling
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 second timeout (2 minutes)
         
         upstreamResponse = await fetch(url, {
           method: "POST",
@@ -108,7 +108,7 @@ export async function POST(request: Request): Promise<Response> {
         if (retryCount < maxRetries && 
             (upstreamResponse.status >= 500 || upstreamResponse.status === 429)) {
           retryCount++;
-          const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff: 2s, 4s, 8s
+          const delay = Math.pow(2, retryCount) * 2000; // Exponential backoff: 4s, 8s, 16s
           
           if (process.env.NODE_ENV !== "production") {
             console.info(`[create-session] Retry ${retryCount}/${maxRetries} after ${delay}ms`, {
@@ -130,7 +130,7 @@ export async function POST(request: Request): Promise<Response> {
             (error instanceof Error && 
              (error.name === 'AbortError' || error.message.includes('fetch')))) {
           retryCount++;
-          const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff
+          const delay = Math.pow(2, retryCount) * 2000; // Exponential backoff: 4s, 8s, 16s
           
           if (process.env.NODE_ENV !== "production") {
             console.info(`[create-session] Retry ${retryCount}/${maxRetries} after network error`, {
