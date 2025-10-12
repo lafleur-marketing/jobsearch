@@ -84,6 +84,8 @@ export async function POST(request: Request): Promise<Response> {
             "Content-Type": "application/json",
             Authorization: `Bearer ${openaiApiKey}`,
             "OpenAI-Beta": "chatkit_beta=v1",
+            "Accept": "application/json",
+            "Cache-Control": "no-cache",
           },
           body: JSON.stringify({
             workflow: { id: resolvedWorkflowId },
@@ -93,6 +95,8 @@ export async function POST(request: Request): Promise<Response> {
                 enabled:
                   parsedBody?.chatkit_configuration?.file_upload?.enabled ?? false,
               },
+              // Force non-streaming
+              streaming: false,
             },
           }),
         });
