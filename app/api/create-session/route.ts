@@ -33,9 +33,8 @@ export async function POST(request: Request): Promise<Response> {
           status: 500,
           headers: { 
             "Content-Type": "application/json",
-            "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-            "Pragma": "no-cache",
-            "Expires": "0"
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache"
           },
         }
       );
@@ -188,9 +187,8 @@ function methodNotAllowedResponse(): Response {
     status: 405,
     headers: { 
       "Content-Type": "application/json",
-      "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-      "Pragma": "no-cache",
-      "Expires": "0"
+      "Cache-Control": "no-cache",
+      "Pragma": "no-cache"
     },
   });
 }
@@ -262,10 +260,9 @@ function buildJsonResponse(
 ): Response {
   const responseHeaders = new Headers(headers);
   
-  // Add proper cache-control headers
-  responseHeaders.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  // Add proper modern cache-control headers
+  responseHeaders.set("Cache-Control", "no-cache");
   responseHeaders.set("Pragma", "no-cache");
-  responseHeaders.set("Expires", "0");
 
   if (sessionCookie) {
     responseHeaders.append("Set-Cookie", sessionCookie);
