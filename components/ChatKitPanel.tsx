@@ -62,6 +62,12 @@ export function ChatKitPanel({
   );
   const [widgetInstanceKey, setWidgetInstanceKey] = useState(0);
 
+  // Debouncing and caching for getClientSecret
+  const sessionCache = useRef<{ secret: string; timestamp: number } | null>(null);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isRefreshingRef = useRef(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   const setErrorState = useCallback((updates: Partial<ErrorState>) => {
     setErrors((current) => ({ ...current, ...updates }));
   }, []);
@@ -69,6 +75,10 @@ export function ChatKitPanel({
   useEffect(() => {
     return () => {
       isMountedRef.current = false;
+      // Cleanup debounce timeout
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -171,120 +181,154 @@ export function ChatKitPanel({
 
   const getClientSecret = useCallback(
     async (currentSecret: string | null) => {
-      if (isDev) {
-        console.info("[ChatKitPanel] getClientSecret invoked", {
-          currentSecretPresent: Boolean(currentSecret),
-          workflowId: WORKFLOW_ID,
-          endpoint: CREATE_SESSION_ENDPOINT,
-        });
-      }
-
-      if (!isWorkflowConfigured) {
-        const detail =
-          "Set NEXT_PUBLIC_CHATKIT_WORKFLOW_ID in your .env.local file.";
-        if (isMountedRef.current) {
-          setErrorState({ session: detail, retryable: false });
-          setIsInitializingSession(false);
-        }
-        throw new Error(detail);
-      }
-
-      if (isMountedRef.current) {
-        if (!currentSecret) {
-          setIsInitializingSession(true);
-        }
-        setErrorState({ session: null, integration: null, retryable: false });
-      }
-
-      try {
-        const response = await fetch(CREATE_SESSION_ENDPOINT, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            workflow: { id: WORKFLOW_ID },
-            chatkit_configuration: {
-              // Disable file uploads to reduce complexity
-              file_upload: {
-                enabled: false,
-              },
-            },
-          }),
-        });
-
-        const raw = await response.text();
-
+      // Check cache first (valid for 5 minutes)
+      const now = Date.now();
+      if (sessionCache.current && 
+          (now - sessionCache.current.timestamp) < 300000 && 
+          currentSecret === sessionCache.current.secret) {
         if (isDev) {
-          console.info("[ChatKitPanel] createSession response", {
-            status: response.status,
-            ok: response.ok,
-            bodyPreview: raw.slice(0, 1600),
-          });
+          console.debug("[ChatKitPanel] Using cached session secret");
         }
+        return sessionCache.current.secret;
+      }
 
-        let data: Record<string, unknown> = {};
-        if (raw) {
+      // Prevent concurrent refresh calls
+      if (isRefreshingRef.current) {
+        if (isDev) {
+          console.debug("[ChatKitPanel] Session refresh already in progress, waiting...");
+        }
+        // Wait for current refresh to complete
+        return new Promise<string>((resolve, reject) => {
+          const checkInterval = setInterval(() => {
+            if (!isRefreshingRef.current) {
+              clearInterval(checkInterval);
+              if (sessionCache.current) {
+                resolve(sessionCache.current.secret);
+              } else {
+                reject(new Error("Session refresh failed"));
+              }
+            }
+          }, 100);
+          
+          // Timeout after 10 seconds
+          setTimeout(() => {
+            clearInterval(checkInterval);
+            reject(new Error("Session refresh timeout"));
+          }, 10000);
+        });
+      }
+
+      // Clear any existing debounce timeout
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+
+      // Debounce rapid calls (wait 500ms)
+      return new Promise<string>((resolve, reject) => {
+        debounceTimeoutRef.current = setTimeout(async () => {
           try {
-            data = JSON.parse(raw) as Record<string, unknown>;
-          } catch (parseError) {
-            console.error(
-              "Failed to parse create-session response",
-              parseError
-            );
-          }
-        }
+            isRefreshingRef.current = true;
+            setIsRefreshing(true);
+            
+            // Reduced logging for better performance
+            if (isDev && !currentSecret) {
+              console.debug("[ChatKitPanel] Creating new session");
+            }
 
-        if (!response.ok) {
-          const detail = extractErrorDetail(data, response.statusText);
-          console.error("Create session request failed", {
-            status: response.status,
-            body: data,
-          });
-          
-          // Check if this is a session expiration error
-          const isSessionExpired = response.status === 401 || 
-            (typeof data.error === 'string' && data.error.toLowerCase().includes('expired'));
-          
-          if (isMountedRef.current) {
-            if (isSessionExpired) {
-              handleSessionExpired();
-            } else {
-              setErrorState({ 
-                session: detail, 
-                retryable: response.status >= 500 || response.status === 429 
+            if (!isWorkflowConfigured) {
+              const detail = "Set NEXT_PUBLIC_CHATKIT_WORKFLOW_ID in your .env.local file.";
+              if (isMountedRef.current) {
+                setErrorState({ session: detail, retryable: false });
+                setIsInitializingSession(false);
+              }
+              throw new Error(detail);
+            }
+
+            if (isMountedRef.current) {
+              if (!currentSecret) {
+                setIsInitializingSession(true);
+              }
+              setErrorState({ session: null, integration: null, retryable: false });
+            }
+
+            const response = await fetch(CREATE_SESSION_ENDPOINT, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                workflow: { id: WORKFLOW_ID },
+                chatkit_configuration: {
+                  // Enable file uploads
+                  file_upload: {
+                    enabled: true,
+                  },
+                },
+              }),
+            });
+
+            const raw = await response.text();
+            let data: Record<string, unknown> = {};
+            if (raw) {
+              try {
+                data = JSON.parse(raw) as Record<string, unknown>;
+              } catch (parseError) {
+                console.error("Failed to parse create-session response", parseError);
+              }
+            }
+
+            if (!response.ok) {
+              const detail = extractErrorDetail(data, response.statusText);
+              console.error("Create session request failed", {
+                status: response.status,
+                body: data,
               });
+              
+              const isSessionExpired = response.status === 401 || 
+                (typeof data.error === 'string' && data.error.toLowerCase().includes('expired'));
+              
+              if (isMountedRef.current) {
+                if (isSessionExpired) {
+                  handleSessionExpired();
+                } else {
+                  setErrorState({ 
+                    session: detail, 
+                    retryable: response.status >= 500 || response.status === 429 
+                  });
+                  setIsInitializingSession(false);
+                }
+              }
+              throw new Error(detail);
+            }
+
+            const clientSecret = data?.client_secret as string | undefined;
+            if (!clientSecret) {
+              throw new Error("Missing client secret in response");
+            }
+
+            // Cache the successful result
+            sessionCache.current = { secret: clientSecret, timestamp: now };
+
+            if (isMountedRef.current) {
+              setErrorState({ session: null, integration: null });
               setIsInitializingSession(false);
             }
+
+            resolve(clientSecret);
+          } catch (error) {
+            console.error("Failed to create ChatKit session", error);
+            const detail = error instanceof Error ? error.message : "Unable to start ChatKit session.";
+            if (isMountedRef.current) {
+              setErrorState({ session: detail, retryable: false });
+              setIsInitializingSession(false);
+            }
+            reject(error instanceof Error ? error : new Error(detail));
+          } finally {
+            isRefreshingRef.current = false;
+            setIsRefreshing(false);
           }
-          throw new Error(detail);
-        }
-
-        const clientSecret = data?.client_secret as string | undefined;
-        if (!clientSecret) {
-          throw new Error("Missing client secret in response");
-        }
-
-        if (isMountedRef.current) {
-          setErrorState({ session: null, integration: null });
-        }
-
-        return clientSecret;
-      } catch (error) {
-        console.error("Failed to create ChatKit session", error);
-        const detail =
-          error instanceof Error
-            ? error.message
-            : "Unable to start ChatKit session.";
-        if (isMountedRef.current) {
-          setErrorState({ session: detail, retryable: false });
-        }
-        throw error instanceof Error ? error : new Error(detail);
-      } finally {
-        if (isMountedRef.current && !currentSecret) {
-          setIsInitializingSession(false);
-        }
-      }
+        }, 500); // 500ms debounce
+      });
     },
     [isWorkflowConfigured, setErrorState, handleSessionExpired]
   );
@@ -302,8 +346,8 @@ export function ChatKitPanel({
     composer: {
       placeholder: PLACEHOLDER_INPUT,
       attachments: {
-        // Disable attachments to reduce complexity
-        enabled: false,
+        // Enable attachments
+        enabled: true,
       },
     },
     threadItemActions: {
@@ -361,14 +405,9 @@ export function ChatKitPanel({
   const activeError = errors.session ?? errors.integration;
   const blockingError = errors.script ?? activeError;
 
-  if (isDev) {
-    console.debug("[ChatKitPanel] render state", {
-      isInitializingSession,
-      hasControl: Boolean(chatkit.control),
-      scriptStatus,
-      hasError: Boolean(blockingError),
-      workflowId: WORKFLOW_ID,
-    });
+  // Reduced logging for better performance
+  if (isDev && blockingError) {
+    console.debug("[ChatKitPanel] error state", { blockingError });
   }
 
   return (
@@ -382,6 +421,13 @@ export function ChatKitPanel({
             : "block h-full w-full"
         }
       />
+      {/* Show loading indicator during session refresh */}
+      {isRefreshing && !blockingError && (
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-2 rounded-lg bg-blue-100 px-3 py-2 text-sm text-blue-700 dark:bg-blue-900 dark:text-blue-200">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
+          Refreshing session...
+        </div>
+      )}
       <ErrorOverlay
         error={blockingError}
         fallbackMessage={

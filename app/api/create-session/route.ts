@@ -75,7 +75,7 @@ export async function POST(request: Request): Promise<Response> {
       try {
         // Add timeout handling
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 second timeout (2 minutes)
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout for UI responsiveness
         
         upstreamResponse = await fetch(url, {
           method: "POST",
@@ -92,7 +92,8 @@ export async function POST(request: Request): Promise<Response> {
             user: userId,
             chatkit_configuration: {
               file_upload: {
-                enabled: false, // Disable file uploads to reduce complexity
+                enabled:
+                  parsedBody?.chatkit_configuration?.file_upload?.enabled ?? true,
               },
             },
           }),
