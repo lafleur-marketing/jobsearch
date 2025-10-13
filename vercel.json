@@ -10,7 +10,5 @@
     "env": {
       "NODE_ENV": "production"
     }
-  },
-  "domains": ["jobsearch.lf1.ai"],
-  "name": "jobsearch"
+  }
 }
