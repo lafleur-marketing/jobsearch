@@ -67,3 +67,4 @@ Before deploying your app, you need to verify the domain by adding it to the [Do
 
 - [ChatKit JavaScript Library](http://openai.github.io/chatkit-js/)
 - [Advanced Self-Hosting Examples](https://github.com/openai/openai-chatkit-advanced-samples)
+# Redeploy with updated Clerk keys
