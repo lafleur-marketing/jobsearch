@@ -10,6 +10,9 @@ import {
 } from "@clerk/nextjs";
 import "./globals.css";
 
+// Force dynamic rendering to avoid build-time Clerk issues
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: "AgentKit demo",
   description: "Demo of ChatKit with hosted workflow",

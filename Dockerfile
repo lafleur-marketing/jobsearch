@@ -1,10 +1,18 @@
 # ---- Build ----
 FROM node:20-bookworm AS build
 WORKDIR /app
+
+# Add build args for environment variables needed during build
+ARG NEXT_PUBLIC_CLERKER_PUBLISHABLE_KEY
+ARG NEXT_PUBLIC_CHATKIT_WORKFLOW_ID
+
+# Set environment variables for build
+ENV NEXT_PUBLIC_CLERKER_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERKER_PUBLISHABLE_KEY
+ENV NEXT_PUBLIC_CHATKIT_WORKFLOW_ID=$NEXT_PUBLIC_CHATKIT_WORKFLOW_ID
+
 COPY package*.json ./
 RUN npm ci --quiet
 COPY . .
-# If you need environment at build time, add ARG/ENV carefully
 RUN npm run build
 
 # ---- Runtime ----
