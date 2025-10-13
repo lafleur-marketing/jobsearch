@@ -23,10 +23,7 @@ jobs:
       
     - name: Login to CapRover
       run: |
-        caprover login -u ${{ secrets.CAPROVER_URL }} -p ${{ secrets.CAPROVER_PASSWORD }} -n captain-01
-      env:
-        CAPROVER_URL: https://captain.lf1.dev
-        CAPROVER_PASSWORD: ${{ secrets.CAPROVER_PASSWORD }}
+        caprover login -u https://captain.lf1.dev -p "${{ secrets.CAPROVER_PASSWORD }}" -n captain-01
         
     - name: Create deployment package
       run: |
