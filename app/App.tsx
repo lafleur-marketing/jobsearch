@@ -28,9 +28,36 @@ export default function App() {
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">
               Your AI Job Search Assistant
             </h2>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4">
               Get personalized help finding opportunities in West Michigan
             </p>
+            
+            {/* ChatKit Explanation */}
+            <div className="max-w-4xl mx-auto mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-3">
+                Powered by OpenAI's ChatKit
+              </h3>
+              <p className="text-sm text-blue-800 dark:text-blue-200 mb-3">
+                This chat interface uses OpenAI's advanced ChatKit technology with a specialized workflow designed for job seekers. Your queries are processed through three specialized AI agents:
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                <div className="bg-white dark:bg-slate-800 p-3 rounded border">
+                  <h4 className="font-semibold text-green-700 dark:text-green-400 mb-1">Agent 1: The Job Seeker</h4>
+                  <p className="text-gray-600 dark:text-gray-300">Understands your career goals, skills, and preferences to find relevant opportunities.</p>
+                </div>
+                <div className="bg-white dark:bg-slate-800 p-3 rounded border">
+                  <h4 className="font-semibold text-blue-700 dark:text-blue-400 mb-1">Agent 2: The Hiring Agent Stalker</h4>
+                  <p className="text-gray-600 dark:text-gray-300">Researches companies, analyzes job postings, and identifies hiring patterns in West Michigan.</p>
+                </div>
+                <div className="bg-white dark:bg-slate-800 p-3 rounded border">
+                  <h4 className="font-semibold text-purple-700 dark:text-purple-400 mb-1">Agent 3: The Resume Coach</h4>
+                  <p className="text-gray-600 dark:text-gray-300">Provides personalized resume feedback, interview prep, and application strategy advice.</p>
+                </div>
+              </div>
+              <p className="text-xs text-blue-700 dark:text-blue-300 mt-3">
+                <strong>How it works:</strong> ChatKit orchestrates these agents to provide comprehensive, personalized job search assistance tailored specifically for the West Michigan market.
+              </p>
+            </div>
           </div>
           <ChatKitPanel
             theme={scheme}
@@ -38,6 +65,67 @@ export default function App() {
             onResponseEnd={handleResponseEnd}
             onThemeRequest={setScheme}
           />
+          
+          {/* Additional Helpful Features */}
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Quick Tips */}
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Quick Tips</h3>
+              </div>
+              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <li>• Ask about specific companies in West Michigan</li>
+                <li>• Upload your resume for personalized feedback</li>
+                <li>• Practice interview questions for your target role</li>
+                <li>• Get salary insights for your area</li>
+              </ul>
+            </div>
+
+            {/* West Michigan Focus */}
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">West Michigan Focus</h3>
+              </div>
+              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <li>• Grand Rapids area opportunities</li>
+                <li>• Kalamazoo job market insights</li>
+                <li>• Holland/Zeeland manufacturing</li>
+                <li>• Local networking events</li>
+              </ul>
+            </div>
+
+            {/* Success Stories */}
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Get Started</h3>
+              </div>
+              <div className="space-y-3 text-sm text-gray-600 dark:text-gray-300">
+                <p className="font-medium text-gray-900 dark:text-white">Try these prompts:</p>
+                <div className="bg-gray-50 dark:bg-slate-700 p-3 rounded-lg">
+                  <p className="text-xs italic">"Help me find software engineering jobs in Grand Rapids"</p>
+                </div>
+                <div className="bg-gray-50 dark:bg-slate-700 p-3 rounded-lg">
+                  <p className="text-xs italic">"Review my resume for marketing positions"</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </SignedIn>
         <SignedOut>
           <div className="flex min-h-[80vh] flex-col items-center justify-center text-center">
