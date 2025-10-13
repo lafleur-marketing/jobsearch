@@ -9,22 +9,22 @@ export const STARTER_PROMPTS: StartScreenPrompt[] = [
   {
     label: "Find jobs in West Michigan",
     prompt: "Help me find job opportunities in West Michigan",
-    icon: "briefcase",
+    icon: "circle-question",
   },
   {
     label: "Review my resume",
     prompt: "Review my resume and suggest improvements for job applications",
-    icon: "file-text",
+    icon: "circle-question",
   },
   {
     label: "Practice interview questions",
     prompt: "Help me practice common interview questions",
-    icon: "message-circle",
+    icon: "circle-question",
   },
   {
     label: "Job search strategy",
     prompt: "Give me advice on my job search strategy",
-    icon: "target",
+    icon: "circle-question",
   },
 ];
 
