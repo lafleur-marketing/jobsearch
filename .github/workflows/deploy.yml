@@ -1,0 +1,26 @@
+name: Deploy to CapRover
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Create deployment package
+      run: |
+        tar --exclude='.git' --exclude='node_modules' --exclude='.next' --exclude='.github' -czf jobsearch.tar.gz .
+        
+    - name: Deploy to CapRover
+      uses: caprover/deploy-from-github@v1
+      with:
+        server: 'https://captain.lf1.dev'
+        app: 'jobsearch'
+        token: ${{ secrets.CAPROVER_APP_TOKEN }}
+        tarFile: 'jobsearch.tar.gz'

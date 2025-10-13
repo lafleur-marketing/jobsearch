@@ -1,0 +1,9 @@
+node_modules
+.npmrc
+.git
+.gitignore
+.next/cache
+.vscode
+.DS_Store
+.env
+.env.*

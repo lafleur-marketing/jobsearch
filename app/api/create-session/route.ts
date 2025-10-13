@@ -66,8 +66,8 @@ export async function POST(request: Request): Promise<Response> {
     const apiBase = process.env.CHATKIT_API_BASE ?? DEFAULT_CHATKIT_BASE;
     const url = `${apiBase}/v1/chatkit/sessions`;
     
-    // Retry logic for failed requests
-    const maxRetries = 3;
+    // Retry logic for failed requests (Pro plan can handle more retries)
+    const maxRetries = 5;
     let retryCount = 0;
     let upstreamResponse: Response | undefined;
     
@@ -75,7 +75,7 @@ export async function POST(request: Request): Promise<Response> {
       try {
         // Add timeout handling (Edge Runtime compatible)
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout (Vercel hobby limit)
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout (Vercel Pro limit)
         
         upstreamResponse = await fetch(url, {
           method: "POST",

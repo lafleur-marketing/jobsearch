@@ -339,7 +339,7 @@ export function ChatKitPanel({
             setIsRefreshing(false);
             requestQueue.current = null; // Clear queue
           }
-        }, 500); // 500ms debounce
+        }, 200); // 200ms debounce (Pro plan can handle faster)
       });
 
       requestQueue.current = requestPromise;
