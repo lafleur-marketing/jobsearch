@@ -35,10 +35,10 @@ export default function App() {
             {/* ChatKit Explanation */}
             <div className="max-w-4xl mx-auto mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
               <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-3">
-                Powered by OpenAI's ChatKit
+                Powered by OpenAI&apos;s ChatKit
               </h3>
               <p className="text-sm text-blue-800 dark:text-blue-200 mb-3">
-                This chat interface uses OpenAI's advanced ChatKit technology with a specialized workflow designed for job seekers. Your queries are processed through three specialized AI agents:
+                This chat interface uses OpenAI&apos;s advanced ChatKit technology with a specialized workflow designed for job seekers. Your queries are processed through three specialized AI agents:
               </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
                 <div className="bg-white dark:bg-slate-800 p-3 rounded border">
@@ -118,10 +118,10 @@ export default function App() {
               <div className="space-y-3 text-sm text-gray-600 dark:text-gray-300">
                 <p className="font-medium text-gray-900 dark:text-white">Try these prompts:</p>
                 <div className="bg-gray-50 dark:bg-slate-700 p-3 rounded-lg">
-                  <p className="text-xs italic">"Help me find software engineering jobs in Grand Rapids"</p>
+                  <p className="text-xs italic">&quot;Help me find software engineering jobs in Grand Rapids&quot;</p>
                 </div>
                 <div className="bg-gray-50 dark:bg-slate-700 p-3 rounded-lg">
-                  <p className="text-xs italic">"Review my resume for marketing positions"</p>
+                  <p className="text-xs italic">&quot;Review my resume for marketing positions&quot;</p>
                 </div>
               </div>
             </div>
