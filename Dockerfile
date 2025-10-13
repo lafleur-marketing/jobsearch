@@ -14,8 +14,9 @@ ENV NEXT_PUBLIC_CHATKIT_WORKFLOW_ID=$NEXT_PUBLIC_CHATKIT_WORKFLOW_ID
 RUN npm install -g pnpm
 
 COPY package*.json ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 COPY . .
+RUN find . -name "._*" -type f -delete || true
 RUN pnpm run build
 
 # ---- Runtime ----

@@ -42,7 +42,7 @@ export default function App() {
                 </div>
               </div>
               <h2 className="mb-4 text-3xl font-bold text-gray-900 dark:text-white">
-                Welcome to Dren's Job Search Assistant
+                Welcome to Dren&apos;s Job Search Assistant
               </h2>
               <p className="mb-6 text-lg text-gray-600 dark:text-gray-300">
                 Your AI-powered career companion for finding opportunities in West Michigan

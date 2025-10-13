@@ -42,7 +42,7 @@ export default function RootLayout({
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-xl font-semibold text-gray-900">Dren's Job Search</h1>
+                  <h1 className="text-xl font-semibold text-gray-900">Dren&apos;s Job Search</h1>
                   <p className="text-sm text-gray-600">West Michigan Opportunities</p>
                 </div>
               </div>

@@ -12,7 +12,7 @@ TAR_FILE="jobsearch.tar.gz"
 
 # Create fresh tarball
 echo "📦 Creating deployment package..."
-tar --exclude='.git' --exclude='node_modules' --exclude='.next' --exclude='jobsearch.tar.gz' --exclude='.github' -czf $TAR_FILE .
+tar --exclude='.git' --exclude='node_modules' --exclude='.next' --exclude='jobsearch.tar.gz' --exclude='.github' --exclude='._*' --exclude='.DS_Store' -czf $TAR_FILE .
 
 echo "✅ Deployment package created: $TAR_FILE"
 echo ""
