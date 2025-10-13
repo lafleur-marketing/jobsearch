@@ -7,15 +7,30 @@ export const CREATE_SESSION_ENDPOINT = "/api/create-session";
 
 export const STARTER_PROMPTS: StartScreenPrompt[] = [
   {
-    label: "What can you do?",
-    prompt: "What can you do?",
-    icon: "circle-question",
+    label: "Find jobs in West Michigan",
+    prompt: "Help me find job opportunities in West Michigan",
+    icon: "briefcase",
+  },
+  {
+    label: "Review my resume",
+    prompt: "Review my resume and suggest improvements for job applications",
+    icon: "file-text",
+  },
+  {
+    label: "Practice interview questions",
+    prompt: "Help me practice common interview questions",
+    icon: "message-circle",
+  },
+  {
+    label: "Job search strategy",
+    prompt: "Give me advice on my job search strategy",
+    icon: "target",
   },
 ];
 
-export const PLACEHOLDER_INPUT = "Ask anything...";
+export const PLACEHOLDER_INPUT = "Ask about jobs, resumes, interviews, or career advice...";
 
-export const GREETING = "How can I help you today?";
+export const GREETING = "Hi Dren! I'm here to help you find your next great job in West Michigan. What would you like to work on today?";
 
 export const getThemeConfig = (theme: ColorScheme): ThemeOption => ({
   color: {
@@ -25,7 +40,7 @@ export const getThemeConfig = (theme: ColorScheme): ThemeOption => ({
       shade: theme === "dark" ? -1 : -4,
     },
     accent: {
-      primary: theme === "dark" ? "#f1f5f9" : "#0f172a",
+      primary: theme === "dark" ? "#3b82f6" : "#1e40af",
       level: 1,
     },
   },
