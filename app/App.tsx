@@ -21,9 +21,17 @@ export default function App() {
   }, []);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-end bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
-      <div className="mx-auto w-full max-w-5xl">
+    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
+      <div className="mx-auto w-full max-w-6xl px-4 py-4 sm:py-8">
         <SignedIn>
+          <div className="mb-4 sm:mb-6 text-center">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              Your AI Job Search Assistant
+            </h2>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+              Get personalized help finding opportunities in West Michigan
+            </p>
+          </div>
           <ChatKitPanel
             theme={scheme}
             onWidgetAction={handleWidgetAction}
