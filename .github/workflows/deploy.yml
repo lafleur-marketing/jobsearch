@@ -31,4 +31,10 @@ jobs:
         
     - name: Deploy to CapRover
       run: |
-        caprover deploy -n captain-01 -a jobsearch -t jobsearch.tar.gz
+        echo "Attempting deployment..."
+        caprover deploy -n captain-01 -a jobsearch -t jobsearch.tar.gz || {
+          echo "Deployment failed, checking if app is building..."
+          echo "If the app is currently building, please wait and try again manually"
+          echo "Or cancel the current build in CapRover dashboard"
+          exit 1
+        }
