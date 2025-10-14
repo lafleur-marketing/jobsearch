@@ -1,9 +1,16 @@
 "use client";
 
 import { useCallback } from "react";
+import dynamic from "next/dynamic";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
-import { ChatKitPanel, type FactAction } from "@/components/ChatKitPanel";
+import type { FactAction } from "@/components/ChatKitPanel";
 import { useColorScheme } from "@/hooks/useColorScheme";
+
+// Prevent SSR for ChatKit to avoid hydration issues
+const ChatKitPanel = dynamic(
+  () => import("@/components/ChatKitPanel").then((mod) => mod.ChatKitPanel),
+  { ssr: false }
+);
 
 export default function App() {
   const { scheme, setScheme } = useColorScheme();

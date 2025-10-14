@@ -53,14 +53,12 @@ export function ChatKitPanel({
   const [errors, setErrors] = useState<ErrorState>(() => createInitialErrors());
   const [isInitializingSession, setIsInitializingSession] = useState(true);
   const isMountedRef = useRef(true);
+  // Initialize as "pending" to avoid hydration mismatch - will be updated on mount
   const [scriptStatus, setScriptStatus] = useState<
     "pending" | "ready" | "error"
-  >(() =>
-    isBrowser && window.customElements?.get("openai-chatkit")
-      ? "ready"
-      : "pending"
-  );
+  >("pending");
   const [widgetInstanceKey, setWidgetInstanceKey] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Debouncing and caching for getClientSecret
   const sessionCache = useRef<{ secret: string; timestamp: number } | null>(null);
@@ -74,6 +72,27 @@ export function ChatKitPanel({
   const setErrorState = useCallback((updates: Partial<ErrorState>) => {
     setErrors((current) => ({ ...current, ...updates }));
   }, []);
+
+  // Check if ChatKit is already loaded on mount (client-side only)
+  useEffect(() => {
+    if (isBrowser && window.customElements?.get("openai-chatkit")) {
+      setScriptStatus("ready");
+    }
+  }, []);
+
+  // Handle Escape key to exit fullscreen
+  useEffect(() => {
+    if (!isFullscreen) return;
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsFullscreen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [isFullscreen]);
 
   useEffect(() => {
     return () => {
@@ -181,6 +200,10 @@ export function ChatKitPanel({
       handleResetChat();
     }, 1000);
   }, [handleResetChat, setErrorState]);
+
+  const toggleFullscreen = useCallback(() => {
+    setIsFullscreen((prev) => !prev);
+  }, []);
 
   const getClientSecret = useCallback(
     async (currentSecret: string | null) => {
@@ -426,7 +449,32 @@ export function ChatKitPanel({
   }
 
   return (
-    <div className="relative w-full rounded-2xl flex flex-col overflow-hidden bg-white shadow-xl border border-gray-200 transition-colors dark:bg-slate-900 dark:border-slate-700" style={{ height: '500px', maxHeight: '70vh' }}>
+    <div 
+      className={`relative flex w-full flex-col overflow-hidden bg-white transition-all dark:bg-slate-900 ${
+        isFullscreen 
+          ? "fixed inset-0 z-50 h-screen rounded-none border-0" 
+          : "rounded-2xl shadow-xl border border-gray-200 dark:border-slate-700"
+      }`}
+      style={isFullscreen ? undefined : { height: '500px', maxHeight: '70vh' }}
+    >
+      {/* Fullscreen toggle button */}
+      <button
+        onClick={toggleFullscreen}
+        className="absolute top-4 right-4 z-30 flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100 text-gray-700 shadow-md transition-colors hover:bg-gray-200 dark:bg-slate-800 dark:text-gray-300 dark:hover:bg-slate-700"
+        aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+        title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+      >
+        {isFullscreen ? (
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-5 w-5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
+          </svg>
+        ) : (
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-5 w-5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+          </svg>
+        )}
+      </button>
+
       <ChatKit
         key={widgetInstanceKey}
         control={chatkit.control}
@@ -438,7 +486,7 @@ export function ChatKitPanel({
       />
       {/* Show loading indicator during session refresh */}
       {isRefreshing && !blockingError && (
-        <div className="absolute top-4 right-4 z-20 flex items-center gap-2 rounded-lg bg-blue-100 px-3 py-2 text-sm text-blue-700 dark:bg-blue-900 dark:text-blue-200">
+        <div className="absolute top-4 right-16 z-20 flex items-center gap-2 rounded-lg bg-blue-100 px-3 py-2 text-sm text-blue-700 dark:bg-blue-900 dark:text-blue-200">
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
           Refreshing session...
         </div>
