@@ -1,8 +1,0 @@
-{
-  "schemaVersion": 2,
-  "dockerfilePath": "./Dockerfile",
-  "buildArgs": {
-    "NEXT_PUBLIC_CLERKER_PUBLISHABLE_KEY": "",
-    "NEXT_PUBLIC_CHATKIT_WORKFLOW_ID": ""
-  }
-}
