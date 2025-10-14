@@ -16,12 +16,17 @@ RUN npm install -g pnpm
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY . .
+RUN find . -name "._*" -type f -delete || true
 RUN pnpm run build
 
 # ---- Runtime ----
 FROM node:20-bookworm
 ENV NODE_ENV=production
 WORKDIR /app
+
+# Install pnpm in runtime image
+RUN npm install -g pnpm
+
 COPY --from=build /app ./
 # CapRover routes traffic to the internal container port you configure below.
 # Use PORT=3000 convention for Next.js
