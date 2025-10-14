@@ -6,7 +6,7 @@ echo "🚀 Preparing deployment for jobsearch.lf1.dev"
 
 # Create deployment package
 echo "📦 Creating deployment package..."
-tar --exclude='.git' --exclude='node_modules' --exclude='.next' --exclude='jobsearch.tar.gz' -czf jobsearch.tar.gz .
+tar --exclude='.git' --exclude='node_modules' --exclude='.next' --exclude='jobsearch.tar.gz' --exclude='pnpm-lock.yaml' -czf jobsearch.tar.gz .
 
 echo "✅ Deployment package created: jobsearch.tar.gz"
 echo ""

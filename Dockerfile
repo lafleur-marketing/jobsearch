@@ -10,10 +10,13 @@ ARG NEXT_PUBLIC_CHATKIT_WORKFLOW_ID
 ENV NEXT_PUBLIC_CLERKER_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERKER_PUBLISHABLE_KEY
 ENV NEXT_PUBLIC_CHATKIT_WORKFLOW_ID=$NEXT_PUBLIC_CHATKIT_WORKFLOW_ID
 
-COPY package*.json ./
-RUN npm ci --quiet
+# Install pnpm
+RUN npm install -g pnpm
+
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 COPY . .
-RUN npm run build
+RUN pnpm run build
 
 # ---- Runtime ----
 FROM node:20-bookworm
@@ -24,4 +27,4 @@ COPY --from=build /app ./
 # Use PORT=3000 convention for Next.js
 ENV PORT=3000
 EXPOSE 3000
-CMD ["npm", "run", "start"]
+CMD ["pnpm", "run", "start"]
